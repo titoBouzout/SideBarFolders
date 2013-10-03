@@ -11,6 +11,19 @@ class Pref:
 	def load(self):
 		Pref.folders = s.get('folders', [])
 
+	def reload(self):
+		Pref.folders = s.get('folders', [])
+		for window in sublime.windows():
+			try:
+				project_data = window.project_data()
+				for folder in range(len(project_data['folders'])):
+					for k in range(len(Pref.folders)):
+						if Pref.folders[k]['path'] == project_data['folders'][folder]['path']:
+							project_data['folders'][folder] = Pref.folders[k]
+							window.set_project_data(project_data);
+			except:
+				pass
+
 	def save(self):
 		if s.get('folders', []) != Pref.folders:
 			s.set('folders', Pref.folders)
@@ -41,7 +54,7 @@ def plugin_loaded():
 	s = sublime.load_settings('Side Bar Folders.sublime-settings');
 	Pref = Pref()
 	Pref.load();
-	s.add_on_change('reload', lambda:Pref.load())
+	s.add_on_change('reload', lambda:Pref.reload())
 	Pref.bucle()
 
 class side_bar_folders_start_blank(sublime_plugin.WindowCommand):
