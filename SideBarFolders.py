@@ -26,6 +26,7 @@ class Pref:
 
 	def save(self):
 		if s.get('folders', []) != Pref.folders:
+			Pref.folders = sorted(Pref.folders, key=lambda x: x['path'].lower(),  reverse=True);
 			s.set('folders', Pref.folders)
 			sublime.save_settings('Side Bar Folders.sublime-settings');
 
@@ -44,6 +45,7 @@ class Pref:
 				Pref.folders[k] = folder
 				return
 		Pref.folders.append(folder)
+
 
 	def bucle(self):
 		Pref.save_folders();
