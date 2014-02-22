@@ -1,11 +1,18 @@
 # coding=utf8
 import sublime, sublime_plugin
-import os
 
 def Window():
 	return sublime.active_window()
 
 s = {}
+
+# when closing a project, project_data returns "None"
+def get_project_data(window):
+	project_data = window.project_data()
+	if project_data is None:
+		project_data = {}
+		project_data['folders'] = []
+	return project_data
 
 class Pref:
 	def load(self):
@@ -15,7 +22,7 @@ class Pref:
 		Pref.folders = s.get('folders', [])
 		for window in sublime.windows():
 			try:
-				project_data = window.project_data()
+				project_data = get_project_data(window)
 				for folder in range(len(project_data['folders'])):
 					for k in range(len(Pref.folders)):
 						if Pref.folders[k]['path'] == project_data['folders'][folder]['path']:
@@ -33,7 +40,7 @@ class Pref:
 	def save_folders(self):
 		for window in sublime.windows():
 			try:
-				for folder in window.project_data()['folders']:
+				for folder in get_project_data(window)['folders']:
 					self.append(folder)
 			except:
 				pass
@@ -61,7 +68,7 @@ def plugin_loaded():
 
 class side_bar_folders_start_blank(sublime_plugin.WindowCommand):
 	def run(self):
-		project = Window().project_data()
+		project = get_project_data(Window())
 		project['folders'] = []
 		Window().set_project_data(project);
 		Window().run_command('prompt_add_folder');
@@ -73,7 +80,7 @@ class side_bar_folders_start_blank(sublime_plugin.WindowCommand):
 class side_bar_folders_load(sublime_plugin.WindowCommand):
 	def run(self, index = -1):
 		folder = (Pref.folders[::-1])[index];
-		project = Window().project_data()
+		project = get_project_data(Window())
 		project['folders'] = []
 		project['folders'].append(folder);
 		Window().set_project_data(project);
