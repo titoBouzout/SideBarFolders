@@ -81,7 +81,8 @@ class side_bar_folders_load(sublime_plugin.WindowCommand):
 	def run(self, index = -1):
 		folder = (Pref.folders[::-1])[index];
 		project = get_project_data(Window())
-		project['folders'] = []
+		if not s.get("multi_folder_mode", False):
+			project['folders'] = []
 		project['folders'].append(folder);
 		Window().set_project_data(project);
 
@@ -102,3 +103,12 @@ class side_bar_folders_clear(sublime_plugin.WindowCommand):
 		if sublime.ok_cancel_dialog('Are you sure?'):
 			Pref.folders = []
 			Pref.save();
+
+class side_bar_folders_sidebar_clear(sublime_plugin.WindowCommand):
+	def run(self):
+		project = get_project_data(Window())
+		project['folders'] = []
+		Window().set_project_data(project);
+
+	def is_visible(self):
+		return len(get_project_data(self.window)['folders']) > 0 and s.get("multi_folder_mode", False)
