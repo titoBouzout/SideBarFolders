@@ -15,12 +15,12 @@ MENU = '''[
 %(current_sidebar_folders)s
 			{"command": "side_bar_folders_sidebar_clear"},
 			{ "caption": "-" },
-			{ "command": "open_file", "args": { "file": "${packages}/User/Side Bar Folders.sublime-settings" }, "caption": "Edit Items"},
+			{ "command": "open_file", "args": { "file": "${packages}/User/Side Bar Folders.sublime-settings" }, "caption": "Edit History"},
 			{"caption": "-"},
 			// Folder history goes here
 %(entries)s
 			{ "caption": "-" },
-			{ "command": "side_bar_folders_clear", "caption": "Clear Items" }
+			{ "command": "side_bar_folders_clear", "caption": "Clear History" }
 		]
 	}
 ]
