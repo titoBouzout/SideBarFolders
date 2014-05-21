@@ -1,10 +1,66 @@
 # coding=utf8
 import sublime, sublime_plugin
+import os
+import codecs
+
+MENU = '''[
+	{"caption": "Help", "mnemonic": "H", "id": "help", "children": [] },
+	{
+		"caption": "Folders",
+		"id": "folders",
+		"children": [
+			{"command": "side_bar_folders_start_blank", "caption": "Load Folder…"},
+			{ "caption": "-" },
+			// Current open folders go here
+%(current_sidebar_folders)s
+			{"command": "side_bar_folders_sidebar_clear"},
+			{ "caption": "-" },
+			{ "command": "open_file", "args": { "file": "${packages}/User/Side Bar Folders.sublime-settings" }, "caption": "Edit Items"},
+			{"caption": "-"},
+			// Folder history goes here
+%(entries)s
+			{ "caption": "-" },
+			{ "command": "side_bar_folders_clear", "caption": "Clear Items" }
+		]
+	}
+]
+'''
 
 def Window():
 	return sublime.active_window()
 
 s = {}
+
+class Menu(object):
+	@staticmethod
+	def prepare_menu():
+		path = os.path.join(sublime.packages_path(), "User", "Side Bar Folders")
+		if not os.path.exists(path):
+			os.makedirs(path)
+		menu = os.path.join(path, "Main.sublime-menu")
+		if not os.path.exists(path):
+			Menu.generate_menu(0)
+		return
+
+	@staticmethod
+	def generate_menu_item(index):
+		return '			{"command": "side_bar_folders_load", "args":{ "index": %d }},' % index
+
+	@staticmethod
+	def generate_open_folders(index):
+		return '			{"command": "side_bar_folders_sidebar_clear", "args":{ "index": %d }},' % index
+
+	@staticmethod
+	def generate_menu(count):
+		folders = get_project_data(Window())['folders']
+		menu = os.path.join(sublime.packages_path(), "User", "Side Bar Folders", "Main.sublime-menu")
+		with codecs.open(menu, "w", encoding="utf-8") as f:
+			f.write(
+				MENU % {
+					"current_sidebar_folders": '\n'.join([Menu.generate_open_folders(x) for x in range(0, len(folders))]),
+					"entries": '\n'.join([Menu.generate_menu_item(x) for x in range(0, count)])
+				}
+			)
 
 # when closing a project, project_data returns "None"
 def get_project_data(window):
@@ -36,6 +92,7 @@ class Pref:
 			Pref.folders = sorted(Pref.folders, key=lambda x: x['path'].lower(),  reverse=True);
 			s.set('folders', Pref.folders)
 			sublime.save_settings('Side Bar Folders.sublime-settings');
+		Menu.generate_menu(len(Pref.folders))
 
 	def save_folders(self):
 		for window in sublime.windows():
@@ -60,6 +117,7 @@ class Pref:
 
 def plugin_loaded():
 	global s, Pref
+	Menu.prepare_menu()
 	s = sublime.load_settings('Side Bar Folders.sublime-settings');
 	Pref = Pref()
 	Pref.load();
@@ -105,10 +163,22 @@ class side_bar_folders_clear(sublime_plugin.WindowCommand):
 			Pref.save();
 
 class side_bar_folders_sidebar_clear(sublime_plugin.WindowCommand):
-	def run(self):
+	def run(self, index=-1):
 		project = get_project_data(Window())
-		project['folders'] = []
+		if index == -1:
+			project['folders'] = []
+		else:
+			del project['folders'][index]
 		Window().set_project_data(project);
+
+	def description(self, index=-1):
+		desc = "Remove All Sidebar Folders…"
+		if index != -1:
+			try:
+				desc = "Remove %s" % get_project_data(self.window)['folders'][index]['path']
+			except:
+				desc = ''
+		return desc
 
 	def is_visible(self):
 		return len(get_project_data(self.window)['folders']) > 0 and s.get("multi_folder_mode", False)
