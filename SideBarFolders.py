@@ -127,8 +127,9 @@ def plugin_loaded():
 class side_bar_folders_start_blank(sublime_plugin.WindowCommand):
 	def run(self):
 		project = get_project_data(Window())
-		project['folders'] = []
-		Window().set_project_data(project);
+		if not s.get("multi_folder_mode", False):
+			project['folders'] = []
+			Window().set_project_data(project);
 		Window().run_command('prompt_add_folder');
 
 	def is_enabled(self):
