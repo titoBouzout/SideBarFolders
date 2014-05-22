@@ -90,6 +90,13 @@ class Pref:
 			except:
 				pass
 
+	def adjust_history(self):
+		limit = s.get("history_limit", 0)
+		if limit > 0:
+			count = len(Pref.folders)
+			if count > limit:
+				Pref.folders = Pref.folders[-limit:]
+
 	def save(self):
 		if s.get('folders', []) != Pref.folders:
 			Pref.folders = sorted(Pref.folders, key=lambda x: x['path'].lower(), reverse=True);
@@ -128,6 +135,7 @@ class Pref:
 				Pref.folders[k] = folder
 				return
 		Pref.folders.append(folder)
+		self.adjust_history()
 
 	def bucle(self):
 		Pref.save_folders()
