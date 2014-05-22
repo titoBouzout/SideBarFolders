@@ -5,17 +5,18 @@ import codecs
 import re
 
 MENU = '''[
-	{"caption": "Help", "mnemonic": "H", "id": "help", "children": [] },
+	{"caption": "Help", "id": "help" },
 	{
 		"caption": "Folders",
 		"id": "folders",
 		"children": [
-			{"command": "side_bar_folders_start_blank", "caption": "Load Folder…"},
-			{"command": "side_bar_folders_start_blank", "caption": "Append Folder…", "args": {"append": true}},
-			{"command": "side_bar_folders_sidebar_clear", "caption": "Clear"},
-			{ "caption": "-" },
+			{ "caption": "-" , "id": "open" },
+			{ "command": "side_bar_folders_start_blank", "caption": "Load Folder…"},
+			{ "command": "side_bar_folders_start_blank", "caption": "Append Folder…", "args": {"append": true}},
+			{ "command": "side_bar_folders_sidebar_clear", "caption": "Clear"},
+			{ "caption": "-", "id": "edit" },
 			{ "command": "open_file", "args": { "file": "${packages}/User/Side Bar Folders.sublime-settings" }, "caption": "Edit"},
-			{ "caption": "-" },
+			{ "caption": "-" , "id": "history" },
 			{
 				"caption": "%(buried_label)s",
 				"children": [
@@ -25,8 +26,9 @@ MENU = '''[
 			},
 			// Folder history goes here
 %(entries)s
-			{ "caption": "-" },
-			{ "command": "side_bar_folders_swap", "caption": "Swap Append/Load"}
+			{ "caption": "-" , "id": "options" },
+			{ "command": "side_bar_folders_swap", "caption": "Swap Append/Load"},
+			{ "caption": "-" , "id": "end" },
 		]
 	}
 ]
@@ -105,7 +107,10 @@ class Pref:
 						if Pref.folders[k]['path'] == project_data['folders'][folder]['path']:
 							project_data['folders'][folder] = Pref.folders[k]
 							window.set_project_data(project_data)
-				if Pref.history != s.get('history_limit', 66) or Pref.swap != s.get("swap_append_load", False):
+				if (
+					Pref.history != s.get('history_limit', 66) or
+					Pref.swap != s.get("swap_append_load", False)
+				):
 					# Re-generate menu with new history limit and swap preference
 					Pref.history = s.get('history_limit', 66)
 					Pref.swap = s.get("swap_append_load", False)
