@@ -206,7 +206,7 @@ class side_bar_folders_load(sublime_plugin.WindowCommand):
 					del folders[len(folders) - index - 1]
 					s.set("folders", folders)
 					sublime.save_settings('Side Bar Folders.sublime-settings')
-				Pref.save_folders()
+				Pref.save()
 			abort = True
 		return abort
 
