@@ -90,23 +90,10 @@ class Menu(object):
 class Pref:
 	def load(self):
 		win = Window()
-		Pref.folders = self.audit_folders(s.get('folders', []))
+		Pref.folders = s.get('folders', [])
 		Pref.history = s.get('history_limit', 66)
 		Pref.swap = s.get("swap_append_load", False)
 		Pref.project_folders = len(get_project_data(win)['folders']) if win is not None else -1
-
-	def audit_folders(self, folders):
-		# Audit folder list for dead links
-		index = 0
-		updated = False
-		for folder in folders[:]:
-			if not os.path.exists(folder['path']):
-				del folders[index]
-				updated = True
-			index += 1
-		if updated:
-			sublime.save_settings('Side Bar Folders.sublime-settings')
-		return folders
 
 	def reload(self):
 		Pref.folders = s.get('folders', [])
@@ -202,11 +189,26 @@ class side_bar_folders_start_blank(sublime_plugin.WindowCommand):
 class side_bar_folders_load(sublime_plugin.WindowCommand):
 	def run(self, index =- 1, append = False):
 		folder = (Pref.folders[::-1])[index];
+		if self.audit_folder(folder, index):
+			return
 		project = get_project_data(Window())
 		if not append:
 			project['folders'] = []
 		project['folders'].append(folder);
-		Window().set_project_data(project);
+		Window().set_project_data(project)
+
+	def audit_folder(self, folder, index):
+		abort = False
+		if not os.path.exists(folder['path']):
+			if sublime.ok_cancel_dialog('Folder does not currently exist! Do you want to remove the folder from the history?'):
+				folders = s.get("folders", [])
+				if index < len(folders):
+					del folders[len(folders) - index - 1]
+					s.set("folders", folders)
+					sublime.save_settings('Side Bar Folders.sublime-settings')
+				Pref.save_folders()
+			abort = True
+		return abort
 
 	def is_visible(self, index = -1, append = False):
 		try:
