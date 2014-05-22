@@ -54,13 +54,16 @@ class Menu(object):
 	def generate_menu(count):
 		folders = get_project_data(Window())['folders']
 		menu = os.path.join(sublime.packages_path(), "User", "Side Bar Folders", "Main.sublime-menu")
-		with codecs.open(menu, "w", encoding="utf-8") as f:
-			f.write(
-				MENU % {
-					"current_sidebar_folders": '\n'.join([Menu.generate_open_folders(x) for x in range(0, len(folders))]),
-					"entries": '\n'.join([Menu.generate_menu_item(x) for x in range(0, count)])
-				}
-			)
+		try:
+			with codecs.open(menu, "w", encoding="utf-8") as f:
+				f.write(
+					MENU % {
+						"current_sidebar_folders": '\n'.join([Menu.generate_open_folders(x) for x in range(0, len(folders))]),
+						"entries": '\n'.join([Menu.generate_menu_item(x) for x in range(0, count)])
+					}
+				)
+		except:
+			pass
 
 # when closing a project, project_data returns "None"
 def get_project_data(window):
@@ -117,7 +120,6 @@ class Pref:
 				Pref.folders[k] = folder
 				return
 		Pref.folders.append(folder)
-
 
 	def bucle(self):
 		Pref.save_folders()
