@@ -72,7 +72,9 @@ def get_project_data(window):
 
 class Pref:
 	def load(self):
+		win = Window()
 		Pref.folders = s.get('folders', [])
+		Pref.project_folders = len(get_project_data(win)['folders']) if win is not None else -1
 
 	def reload(self):
 		Pref.folders = s.get('folders', [])
@@ -92,7 +94,13 @@ class Pref:
 			Pref.folders = sorted(Pref.folders, key=lambda x: x['path'].lower(),  reverse=True);
 			s.set('folders', Pref.folders)
 			sublime.save_settings('Side Bar Folders.sublime-settings');
-		Menu.generate_menu(len(Pref.folders))
+			Menu.generate_menu(len(Pref.folders))
+		else:
+			win = Window()
+			folder_count = len(get_project_data(win)['folders']) if win is not None else -1
+			if folder_count != Pref.project_folders:
+				Pref.project_folders = folder_count
+				Menu.generate_menu(len(Pref.folders))
 
 	def save_folders(self):
 		for window in sublime.windows():
@@ -112,7 +120,7 @@ class Pref:
 
 
 	def bucle(self):
-		Pref.save_folders();
+		Pref.save_folders()
 		sublime.set_timeout(lambda:Pref.bucle(), 60*1000)
 
 def plugin_loaded():
@@ -183,3 +191,7 @@ class side_bar_folders_sidebar_clear(sublime_plugin.WindowCommand):
 
 	def is_visible(self):
 		return len(get_project_data(self.window)['folders']) > 0 and s.get("multi_folder_mode", False)
+
+class side_bar_folders_listener(sublime_plugin.EventListener):
+	def on_activated(self, view):
+		Pref.save_folders()
