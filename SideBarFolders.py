@@ -74,8 +74,21 @@ class Menu(object):
 class Pref:
 	def load(self):
 		win = Window()
-		Pref.folders = s.get('folders', [])
+		Pref.folders = self.audit_folders(s.get('folders', []))
 		Pref.project_folders = len(get_project_data(win)['folders']) if win is not None else -1
+
+	def audit_folders(self, folders):
+		# Audit folder list for dead links
+		index = 0
+		updated = False
+		for folder in folders[:]:
+			if not os.path.exists(folder['path']):
+				del folders[index]
+				updated = True
+			index += 1
+		if updated:
+			sublime.save_settings('Side Bar Folders.sublime-settings')
+		return folders
 
 	def reload(self):
 		Pref.folders = s.get('folders', [])
@@ -99,9 +112,9 @@ class Pref:
 
 	def save(self):
 		if s.get('folders', []) != Pref.folders:
-			Pref.folders = sorted(Pref.folders, key=lambda x: x['path'].lower(), reverse=True);
+			Pref.folders = sorted(Pref.folders, key=lambda x: x['path'].lower(), reverse=True)
 			s.set('folders', Pref.folders)
-			sublime.save_settings('Side Bar Folders.sublime-settings');
+			sublime.save_settings('Side Bar Folders.sublime-settings')
 			Menu.generate_menu(len(Pref.folders))
 
 	def save_folders(self):
