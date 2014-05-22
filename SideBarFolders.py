@@ -2,6 +2,7 @@
 import sublime, sublime_plugin
 import os
 import codecs
+import re
 
 MENU = '''[
 	{"caption": "Help", "mnemonic": "H", "id": "help", "children": [] },
@@ -30,6 +31,18 @@ def Window():
 	return sublime.active_window()
 
 s = {}
+
+# when closing a project, project_data returns "None"
+def get_project_data(window):
+	project_data = window.project_data()
+	if project_data is None:
+		project_data = {}
+		project_data['folders'] = []
+	return project_data
+
+def get_project_path(window):
+	file_name = window.project_file_name()
+	return None if file_name is None else os.path.dirname(file_name)
 
 class Menu(object):
 	@staticmethod
@@ -65,14 +78,6 @@ class Menu(object):
 		except:
 			pass
 
-# when closing a project, project_data returns "None"
-def get_project_data(window):
-	project_data = window.project_data()
-	if project_data is None:
-		project_data = {}
-		project_data['folders'] = []
-	return project_data
-
 class Pref:
 	def load(self):
 		win = Window()
@@ -94,7 +99,7 @@ class Pref:
 
 	def save(self):
 		if s.get('folders', []) != Pref.folders:
-			Pref.folders = sorted(Pref.folders, key=lambda x: x['path'].lower(),  reverse=True);
+			Pref.folders = sorted(Pref.folders, key=lambda x: x['path'].lower(), reverse=True);
 			s.set('folders', Pref.folders)
 			sublime.save_settings('Side Bar Folders.sublime-settings');
 			Menu.generate_menu(len(Pref.folders))
@@ -112,9 +117,25 @@ class Pref:
 					self.append(folder)
 			except:
 				pass
-		Pref.save();
+		Pref.save()
+
+	def normalize_folder(self, folder):
+		# If a path is given that is relative (from a project of disk)
+		# Convert the relative path to absolute
+		normalize = False
+		if sublime.platform() == "windows":
+			if re.match(r"(^[A-Za-z]{1}:(?:\\|/))", folder) is None:
+				normalize = True
+		elif not folder.startswith("/"):
+			normalize = True
+
+		project_path = get_project_path(Window())
+		if project_path is not None and normalize:
+			folder = os.path.normpath(os.path.join(project_path, folder))
+		return folder
 
 	def append(self, folder):
+		folder["path"] = self.normalize_folder(folder["path"])
 		for k in range(len(Pref.folders)):
 			if Pref.folders[k]['path'] == folder['path']:
 				Pref.folders[k] = folder
