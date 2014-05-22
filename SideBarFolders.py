@@ -12,7 +12,7 @@ MENU = '''[
 		"children": [
 			{"command": "side_bar_folders_start_blank", "caption": "Load Folder…"},
 			{ "caption": "-" },
-			{"command": "side_bar_folders_sidebar_clear"},
+			{"command": "side_bar_folders_sidebar_clear", "caption": "Remove All Sidebar Folders"},
 			{ "caption": "-" },
 			{ "command": "open_file", "args": { "file": "${packages}/User/Side Bar Folders.sublime-settings" }, "caption": "Edit History"},
 			{"caption": "-"},
@@ -179,25 +179,14 @@ class side_bar_folders_clear(sublime_plugin.WindowCommand):
 	def run(self):
 		if sublime.ok_cancel_dialog('Are you sure?'):
 			Pref.folders = []
-			Pref.save();
+			Pref.save()
 
 class side_bar_folders_sidebar_clear(sublime_plugin.WindowCommand):
-	def run(self, index=-1):
-		project = get_project_data(Window())
-		if index == -1:
+	def run(self):
+		if sublime.ok_cancel_dialog('Remove all folders?'):
+			project = get_project_data(Window())
 			project['folders'] = []
-		else:
-			del project['folders'][index]
-		Window().set_project_data(project);
-
-	def description(self, index=-1):
-		desc = "Remove All Sidebar Folders"
-		if index != -1:
-			try:
-				desc = "Remove %s" % get_project_data(self.window)['folders'][index]['path']
-			except:
-				desc = ''
-		return desc
+			Window().set_project_data(project);
 
 	def is_visible(self):
 		return len(get_project_data(self.window)['folders']) > 0 and s.get("multi_folder_mode", False)
