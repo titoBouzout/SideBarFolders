@@ -1,6 +1,6 @@
 {
     // Allow multi-folders
-    "multi_folder_mode": false,
+    "swap_append_load": false,
 
     // History max number of history items
     // 0 means no limit

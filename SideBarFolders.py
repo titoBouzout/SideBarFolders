@@ -11,19 +11,29 @@ MENU = '''[
 		"id": "folders",
 		"children": [
 			{"command": "side_bar_folders_start_blank", "caption": "Load Folder…"},
+			{"command": "side_bar_folders_start_blank", "caption": "Append Folder…", "args": {"append": true}},
+			{"command": "side_bar_folders_sidebar_clear", "caption": "Clear"},
 			{ "caption": "-" },
-			{"command": "side_bar_folders_sidebar_clear", "caption": "Remove All Sidebar Folders"},
+			{ "command": "open_file", "args": { "file": "${packages}/User/Side Bar Folders.sublime-settings" }, "caption": "Edit"},
 			{ "caption": "-" },
-			{ "command": "open_file", "args": { "file": "${packages}/User/Side Bar Folders.sublime-settings" }, "caption": "Edit History"},
-			{"caption": "-"},
+			{
+				"caption": "%(buried_label)s",
+				"children": [
+					// Folder history goes here
+%(buried_entries)s
+				]
+			},
 			// Folder history goes here
 %(entries)s
 			{ "caption": "-" },
-			{ "command": "side_bar_folders_clear", "caption": "Clear History" }
+			{ "command": "side_bar_folders_swap", "caption": "Swap Append/Load"}
 		]
 	}
 ]
 '''
+
+FOLDER_ENTRY = '%(indent)s{"command": "side_bar_folders_load", "args":{ "index": %(index)d%(append)s }},'
+
 
 def Window():
 	return sublime.active_window()
@@ -54,18 +64,24 @@ class Menu(object):
 		return
 
 	@staticmethod
-	def generate_menu_item(index):
-		return '			{"command": "side_bar_folders_load", "args":{ "index": %d }},' % index
+	def generate_menu_item(index, append=False, indent=3):
+		return FOLDER_ENTRY % {
+			"indent":"	" * indent,
+			"index": index,
+			"append": ", \"append\": true" if append else ""
+		}
 
 	@staticmethod
 	def generate_menu(count):
-		folders = get_project_data(Window())['folders']
 		menu = os.path.join(sublime.packages_path(), "User", "Side Bar Folders", "Main.sublime-menu")
+		swap_append = s.get('swap_append_load', False)
 		try:
 			with codecs.open(menu, "w", encoding="utf-8") as f:
 				f.write(
 					MENU % {
-						"entries": '\n'.join([Menu.generate_menu_item(x) for x in range(0, count)])
+						"buried_label": "Append" if not swap_append else "Load",
+						"buried_entries": '\n'.join([Menu.generate_menu_item(x, not swap_append, 5) for x in range(0, count)]),
+						"entries": '\n'.join([Menu.generate_menu_item(x, swap_append) for x in range(0, count)])
 					}
 				)
 		except:
@@ -75,6 +91,8 @@ class Pref:
 	def load(self):
 		win = Window()
 		Pref.folders = self.audit_folders(s.get('folders', []))
+		Pref.history = s.get('history_limit', 66)
+		Pref.swap = s.get("swap_append_load", False)
 		Pref.project_folders = len(get_project_data(win)['folders']) if win is not None else -1
 
 	def audit_folders(self, folders):
@@ -99,7 +117,13 @@ class Pref:
 					for k in range(len(Pref.folders)):
 						if Pref.folders[k]['path'] == project_data['folders'][folder]['path']:
 							project_data['folders'][folder] = Pref.folders[k]
-							window.set_project_data(project_data);
+							window.set_project_data(project_data)
+				if Pref.history != s.get('history_limit', 66) or Pref.swap != s.get("swap_append_load", False):
+					# Re-generate menu with new history limit and swap preference
+					Pref.history = s.get('history_limit', 66)
+					Pref.swap = s.get("swap_append_load", False)
+					self.adjust_history()
+					Menu.generate_menu(len(Pref.folders))
 			except:
 				pass
 
@@ -164,33 +188,33 @@ def plugin_loaded():
 	Pref.bucle()
 
 class side_bar_folders_start_blank(sublime_plugin.WindowCommand):
-	def run(self):
+	def run(self, append = False):
 		project = get_project_data(Window())
-		if not s.get("multi_folder_mode", False):
+		if not append:
 			project['folders'] = []
 			Window().set_project_data(project);
 		Window().run_command('prompt_add_folder');
 
-	def is_enabled(self):
+	def is_enabled(self, append = False):
 		Pref.save_folders() # <--- this works as an onpopupshowing..
 		return True
 
 class side_bar_folders_load(sublime_plugin.WindowCommand):
-	def run(self, index = -1):
+	def run(self, index =- 1, append = False):
 		folder = (Pref.folders[::-1])[index];
 		project = get_project_data(Window())
-		if not s.get("multi_folder_mode", False):
+		if not append:
 			project['folders'] = []
 		project['folders'].append(folder);
 		Window().set_project_data(project);
 
-	def is_visible(self, index = -1):
+	def is_visible(self, index = -1, append = False):
 		try:
 			return (Pref.folders[::-1])[index] != None
 		except:
 			return False
 
-	def description(self, index = -1):
+	def description(self, index = -1, append = False):
 		try:
 			return (Pref.folders[::-1])[index]['path']
 		except:
@@ -210,8 +234,17 @@ class side_bar_folders_sidebar_clear(sublime_plugin.WindowCommand):
 			Window().set_project_data(project);
 
 	def is_visible(self):
-		return len(get_project_data(self.window)['folders']) > 0 and s.get("multi_folder_mode", False)
+		return len(get_project_data(self.window)['folders']) > 0
 
 class side_bar_folders_listener(sublime_plugin.EventListener):
 	def on_activated(self, view):
 		Pref.save_folders()
+
+class side_bar_folders_swap(sublime_plugin.WindowCommand):
+	def run(self):
+		current_swap = s.get("swap_append_load", False)
+		s.set("swap_append_load", not current_swap)
+		sublime.save_settings('Side Bar Folders.sublime-settings')
+
+	def is_checked(self):
+		return s.get("swap_append_load", False)
