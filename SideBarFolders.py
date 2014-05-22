@@ -95,7 +95,6 @@ class Pref:
 		Pref.folders = s.get('folders', [])
 		Pref.history = s.get('history_limit', 66)
 		Pref.swap = s.get("swap_append_load", False)
-		Pref.project_folders = len(get_project_data(win)['folders']) if win is not None else -1
 
 	def reload(self):
 		Pref.folders = s.get('folders', [])
