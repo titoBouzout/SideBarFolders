@@ -12,8 +12,6 @@ MENU = '''[
 		"children": [
 			{"command": "side_bar_folders_start_blank", "caption": "Load Folder…"},
 			{ "caption": "-" },
-			// Current open folders go here
-%(current_sidebar_folders)s
 			{"command": "side_bar_folders_sidebar_clear"},
 			{ "caption": "-" },
 			{ "command": "open_file", "args": { "file": "${packages}/User/Side Bar Folders.sublime-settings" }, "caption": "Edit History"},
@@ -60,10 +58,6 @@ class Menu(object):
 		return '			{"command": "side_bar_folders_load", "args":{ "index": %d }},' % index
 
 	@staticmethod
-	def generate_open_folders(index):
-		return '			{"command": "side_bar_folders_sidebar_clear", "args":{ "index": %d }},' % index
-
-	@staticmethod
 	def generate_menu(count):
 		folders = get_project_data(Window())['folders']
 		menu = os.path.join(sublime.packages_path(), "User", "Side Bar Folders", "Main.sublime-menu")
@@ -71,7 +65,6 @@ class Menu(object):
 			with codecs.open(menu, "w", encoding="utf-8") as f:
 				f.write(
 					MENU % {
-						"current_sidebar_folders": '\n'.join([Menu.generate_open_folders(x) for x in range(0, len(folders))]),
 						"entries": '\n'.join([Menu.generate_menu_item(x) for x in range(0, count)])
 					}
 				)
@@ -103,23 +96,17 @@ class Pref:
 			s.set('folders', Pref.folders)
 			sublime.save_settings('Side Bar Folders.sublime-settings');
 			Menu.generate_menu(len(Pref.folders))
-		else:
-			win = Window()
-			folder_count = len(get_project_data(win)['folders']) if win is not None else -1
-			if folder_count != Pref.project_folders:
-				Pref.project_folders = folder_count
-				Menu.generate_menu(len(Pref.folders))
 
 	def save_folders(self):
 		for window in sublime.windows():
 			try:
 				for folder in get_project_data(window)['folders']:
-					self.append(folder)
+					self.append(folder, window)
 			except:
 				pass
 		Pref.save()
 
-	def normalize_folder(self, folder):
+	def normalize_folder(self, folder, window):
 		# If a path is given that is relative (from a project of disk)
 		# Convert the relative path to absolute
 		normalize = False
@@ -129,13 +116,13 @@ class Pref:
 		elif not folder.startswith("/"):
 			normalize = True
 
-		project_path = get_project_path(Window())
+		project_path = get_project_path(window)
 		if project_path is not None and normalize:
 			folder = os.path.normpath(os.path.join(project_path, folder))
 		return folder
 
-	def append(self, folder):
-		folder["path"] = self.normalize_folder(folder["path"])
+	def append(self, folder, window):
+		folder["path"] = self.normalize_folder(folder["path"], window)
 		for k in range(len(Pref.folders)):
 			if Pref.folders[k]['path'] == folder['path']:
 				Pref.folders[k] = folder
@@ -204,7 +191,7 @@ class side_bar_folders_sidebar_clear(sublime_plugin.WindowCommand):
 		Window().set_project_data(project);
 
 	def description(self, index=-1):
-		desc = "Remove All Sidebar Folders…"
+		desc = "Remove All Sidebar Folders"
 		if index != -1:
 			try:
 				desc = "Remove %s" % get_project_data(self.window)['folders'][index]['path']
