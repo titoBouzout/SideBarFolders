@@ -61,8 +61,8 @@ class Menu(object):
 		if not os.path.exists(path):
 			os.makedirs(path)
 		menu = os.path.join(path, "Main.sublime-menu")
-		if not os.path.exists(path):
-			Menu.generate_menu(0)
+		if not os.path.exists(menu):
+			Menu.generate_menu(len(Pref.folders))
 		return
 
 	@staticmethod
@@ -91,7 +91,6 @@ class Menu(object):
 
 class Pref:
 	def load(self):
-		win = Window()
 		Pref.folders = s.get('folders', [])
 		Pref.history = s.get('history_limit', 66)
 		Pref.swap = s.get("swap_append_load", False)
@@ -171,11 +170,11 @@ class Pref:
 
 def plugin_loaded():
 	global s, Pref
-	Menu.prepare_menu()
 	s = sublime.load_settings('Side Bar Folders.sublime-settings');
 	Pref = Pref()
 	Pref.load();
 	s.add_on_change('reload', lambda:Pref.reload())
+	Menu.prepare_menu()
 	Pref.bucle()
 
 class side_bar_folders_start_blank(sublime_plugin.WindowCommand):
