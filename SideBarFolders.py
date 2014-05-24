@@ -21,6 +21,8 @@ MENU = '''[
 			{
 				"caption": "%(buried_label)s",
 				"children": [
+					{ "command": "side_bar_folders_swap", "caption": "Use %(buried_label)s List as Default "},
+					{ "caption": "-" },
 					// Folder history goes here
 %(buried_entries)s
 				]
@@ -28,14 +30,13 @@ MENU = '''[
 			// Folder history goes here
 %(entries)s
 			{ "caption": "-" , "id": "options" },
-			{ "command": "side_bar_folders_swap", "caption": "Swap Append/Load"},
-			{ "caption": "-" , "id": "end" },
+			{ "caption": "-" , "id": "end" }
 		]
 	}
 ]
 '''
 
-FOLDER_ENTRY = '%(indent)s{"command": "side_bar_folders_load", "args":{ "index": %(index)d%(append)s }},'
+FOLDER_ENTRY = '%(indent)s{ "command": "side_bar_folders_load", "args":{ "index": %(index)d%(append)s }},'
 
 
 def Window():
@@ -272,6 +273,3 @@ class side_bar_folders_swap(sublime_plugin.WindowCommand):
 		current_swap = s.get("swap_append_load", False)
 		s.set("swap_append_load", not current_swap)
 		sublime.save_settings('Side Bar Folders.sublime-settings')
-
-	def is_checked(self):
-		return s.get("swap_append_load", False)
