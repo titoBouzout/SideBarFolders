@@ -155,8 +155,18 @@ class Pref:
 			folder = os.path.normpath(os.path.join(project_path, folder))
 		return folder
 
+	def display_name(self, folder):
+		home = os.path.expanduser("~")
+		display = folder
+		if folder.startswith(home):
+			display = folder.replace(home, "~", 1)
+		if len(display) > 51:
+			display = display[:25] + "…" + display[-25:]
+		return display
+
 	def append(self, folder, window):
 		folder["path"] = self.normalize_folder(folder["path"], window)
+		folder["display"] = self.display_name(folder["path"])
 		for k in range(len(Pref.folders)):
 			if Pref.folders[k]['path'] == folder['path']:
 				Pref.folders[k] = folder
@@ -197,7 +207,11 @@ class side_bar_folders_load(sublime_plugin.WindowCommand):
 		project = get_project_data(Window())
 		if not append:
 			project['folders'] = []
-		project['folders'].append(folder);
+		try:
+			del folder["display"]
+		except:
+			pass
+		project['folders'].append(folder)
 		Window().set_project_data(project)
 
 	def audit_folder(self, folder, index):
@@ -221,7 +235,8 @@ class side_bar_folders_load(sublime_plugin.WindowCommand):
 
 	def description(self, index = -1, append = False):
 		try:
-			return (Pref.folders[::-1])[index]['path']
+			item = (Pref.folders[::-1])[index]
+			return item.get("display", item["path"])
 		except:
 			return ''
 
@@ -236,7 +251,7 @@ class side_bar_folders_sidebar_clear(sublime_plugin.WindowCommand):
 		if sublime.ok_cancel_dialog('Remove all folders?'):
 			project = get_project_data(Window())
 			project['folders'] = []
-			Window().set_project_data(project);
+			Window().set_project_data(project)
 
 	def is_visible(self):
 		return len(get_project_data(self.window)['folders']) > 0
