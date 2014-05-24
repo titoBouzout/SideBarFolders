@@ -105,26 +105,26 @@ class Pref:
 						if Pref.folders[k]['path'] == project_data['folders'][folder]['path']:
 							project_data['folders'][folder] = Pref.folders[k]
 							window.set_project_data(project_data)
-				if (
-					Pref.history != s.get('history_limit', 66) or
-					Pref.swap != s.get("swap_append_load", False)
-				):
-					# Re-generate menu with new history limit and swap preference
-					Pref.history = s.get('history_limit', 66)
+				if Pref.swap != s.get("swap_append_load", False):
+					# Re-generate menu with new swap preference
 					Pref.swap = s.get("swap_append_load", False)
-					self.adjust_history()
 					Menu.generate_menu(len(Pref.folders))
+				if Pref.history != s.get('history_limit', 66):
+					# Set new limit and re-save making adjustments to history list
+					Pref.history = s.get('history_limit', 66)
+					self.save()
 			except:
 				pass
 
 	def adjust_history(self):
-		limit = s.get("history_limit", 0)
+		limit = Pref.history
 		if limit > 0:
 			count = len(Pref.folders)
 			if count > limit:
 				Pref.folders = Pref.folders[-limit:]
 
 	def save(self):
+		self.adjust_history()
 		if s.get('folders', []) != Pref.folders:
 			Pref.folders = sorted(Pref.folders, key=lambda x: x['path'].lower(), reverse=True)
 			s.set('folders', Pref.folders)
@@ -165,6 +165,8 @@ class Pref:
 		return display
 
 	def append(self, folder, window):
+		if len(Pref.folders) >= Pref.history:
+			return
 		folder["path"] = self.normalize_folder(folder["path"], window)
 		folder["display"] = self.display_name(folder["path"])
 		for k in range(len(Pref.folders)):
@@ -172,7 +174,6 @@ class Pref:
 				Pref.folders[k] = folder
 				return
 		Pref.folders.append(folder)
-		self.adjust_history()
 
 	def bucle(self):
 		Pref.save_folders()
