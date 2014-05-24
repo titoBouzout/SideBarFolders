@@ -3,6 +3,7 @@ import sublime, sublime_plugin
 import os
 import codecs
 import re
+import copy
 
 MENU = '''[
 	{"caption": "Help", "id": "help" },
@@ -103,7 +104,12 @@ class Pref:
 				for folder in range(len(project_data['folders'])):
 					for k in range(len(Pref.folders)):
 						if Pref.folders[k]['path'] == project_data['folders'][folder]['path']:
-							project_data['folders'][folder] = Pref.folders[k]
+							f = copy.deepcopy(Pref.folders[k])
+							try:
+								del f["display"]
+							except:
+								pass
+							project_data['folders'][folder] = f
 							window.set_project_data(project_data)
 				if Pref.swap != s.get("swap_append_load", False):
 					# Re-generate menu with new swap preference
@@ -202,7 +208,7 @@ class side_bar_folders_start_blank(sublime_plugin.WindowCommand):
 
 class side_bar_folders_load(sublime_plugin.WindowCommand):
 	def run(self, index =- 1, append = False):
-		folder = (Pref.folders[::-1])[index];
+		folder = copy.deepcopy((Pref.folders[::-1])[index]);
 		if self.audit_folder(folder, index):
 			return
 		project = get_project_data(Window())
