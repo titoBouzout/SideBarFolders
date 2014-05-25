@@ -3,7 +3,6 @@ import sublime, sublime_plugin
 import os
 import codecs
 import re
-import copy
 
 MENU = '''[
 	{"caption": "Help", "id": "help" },
@@ -193,10 +192,10 @@ class Pref:
 
 def plugin_loaded():
 	global s, Pref
-	s = sublime.load_settings('Side Bar Folders.sublime-settings');
+	s = sublime.load_settings('Side Bar Folders.sublime-settings')
 	Pref = Pref()
-	Pref.load();
-	Pref.reload_prefs();
+	Pref.load()
+	Pref.reload_prefs()
 	s.add_on_change('reload_prefs', lambda:Pref.reload_prefs())
 	Menu.prepare_menu()
 	Pref.bucle()
@@ -206,8 +205,8 @@ class side_bar_folders_start_blank(sublime_plugin.WindowCommand):
 		project = get_project_data(Window())
 		if not append:
 			project['folders'] = []
-			Window().set_project_data(project);
-		Window().run_command('prompt_add_folder');
+			Window().set_project_data(project)
+		Window().run_command('prompt_add_folder')
 
 	def is_enabled(self, append = False):
 		Pref.save_folders() # <--- this works as an onpopupshowing..
@@ -215,7 +214,7 @@ class side_bar_folders_start_blank(sublime_plugin.WindowCommand):
 
 class side_bar_folders_load(sublime_plugin.WindowCommand):
 	def run(self, index =- 1, append = False):
-		folder = copy.deepcopy((Pref.folders[::-1])[index]);
+		folder = (Pref.folders[::-1])[index]
 		if self.audit_folder(folder, index):
 			return
 		project = get_project_data(Window())
