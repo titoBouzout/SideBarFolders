@@ -98,8 +98,7 @@ class Pref:
 
 	def reload_prefs(self):
 		Pref.history = s.get('history_limit', 66)
-		if Pref.swap != s.get("swap_append_load", False):
-			Menu.generate_menu(len(Pref.folders))
+		Menu.generate_menu(len(Pref.folders))
 		Pref.swap = s.get("swap_append_load", False)
 		Pref.shorter_labels =s.get('shorter_labels', True)
 		Pref.label_replace_regexp =s.get('label_replace_regexp', True)
