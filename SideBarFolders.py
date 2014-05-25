@@ -14,14 +14,14 @@ MENU = '''[
 			{ "caption": "-" , "id": "open" },
 			{ "command": "side_bar_folders_start_blank", "caption": "Load Folder…"},
 			{ "command": "side_bar_folders_start_blank", "caption": "Append Folder…", "args": {"append": true}},
-			{ "command": "side_bar_folders_sidebar_clear", "caption": "Clear"},
 			{ "caption": "-", "id": "edit" },
-			{ "command": "open_file", "args": { "file": "${packages}/User/Side Bar Folders.sublime-settings" }, "caption": "Edit"},
+			{ "command": "open_file", "args": { "file": "${packages}/User/Side Bar Folders.sublime-settings" }, "caption": "Edit Folders"},
+			{ "command": "side_bar_folders_sidebar_clear", "caption": "Clear Sidebar"},
 			{ "caption": "-" , "id": "history" },
 			{
-				"caption": "%(buried_label)s",
+				"caption": "%(buried_label)s Folder",
 				"children": [
-					{ "command": "side_bar_folders_swap", "caption": "Use %(buried_label)s List as Default "},
+					{ "command": "side_bar_folders_swap", "caption": "Use \\"%(buried_label)s\\" Folder List as Default "},
 					{ "caption": "-" },
 					// Folder history goes here
 %(buried_entries)s
