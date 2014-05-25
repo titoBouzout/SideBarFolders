@@ -228,9 +228,8 @@ class side_bar_folders_load(sublime_plugin.WindowCommand):
 		abort = False
 		if not os.path.exists(folder['path']):
 			if sublime.ok_cancel_dialog('Folder does not currently exist! Do you want to remove the folder from the history?'):
-				folders = s.get("folders", [])
-				if index < len(folders):
-					del folders[len(folders) - index - 1]
+				if index < len(Pref.folders):
+					del Pref.folders[len(Pref.folders) - index - 1]
 				Pref.save()
 			abort = True
 		return abort
