@@ -28,6 +28,7 @@ MENU = '''[
 				]
 			},
 			// Folder history goes here
+			{ "caption": "-" , "id": "options-separator" },
 %(entries)s
 			{ "caption": "-" , "id": "options" },
 			{ "caption": "-" , "id": "end" }
