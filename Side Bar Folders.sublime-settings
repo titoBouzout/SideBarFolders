@@ -1,8 +1,20 @@
 {
-    // Allow multi-folders
+    // Swap Append/Load as the default list
     "swap_append_load": false,
 
     // History max number of history items
     // 0 means no limit
-    "history_limit": 66
+    "history_limit": 66,
+
+    //Labels
+    "shorter_labels": false,
+
+    // Max number of characters
+    "label_characters": 51,
+
+    //remove prefixes, such drive names or the folder of "projects"
+    "label_replace_regexp": "^[a-z]:\\((www|projects)\\)?",
+
+    //Unix style? replace every \ with /
+    "label_unix_style": true
 }

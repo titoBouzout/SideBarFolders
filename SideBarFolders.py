@@ -13,28 +13,30 @@ MENU = '''[
 			{ "caption": "-" , "id": "open" },
 			{ "command": "side_bar_folders_start_blank", "caption": "Load Folder…"},
 			{ "command": "side_bar_folders_start_blank", "caption": "Append Folder…", "args": {"append": true}},
-			{ "command": "side_bar_folders_sidebar_clear", "caption": "Clear"},
 			{ "caption": "-", "id": "edit" },
-			{ "command": "open_file", "args": { "file": "${packages}/User/Side Bar Folders.sublime-settings" }, "caption": "Edit"},
+			{ "command": "open_file", "args": { "file": "${packages}/User/Side Bar Folders.sublime-settings" }, "caption": "Edit Folders"},
+			{ "command": "side_bar_folders_sidebar_clear", "caption": "Clear Sidebar"},
 			{ "caption": "-" , "id": "history" },
 			{
-				"caption": "%(buried_label)s",
+				"caption": "%(buried_label)s Folder",
 				"children": [
+					{ "command": "side_bar_folders_swap", "caption": "Use \\"%(buried_label)s\\" Folder List as Default "},
+					{ "caption": "-" },
 					// Folder history goes here
 %(buried_entries)s
 				]
 			},
 			// Folder history goes here
+			{ "caption": "-" , "id": "options-separator" },
 %(entries)s
 			{ "caption": "-" , "id": "options" },
-			{ "command": "side_bar_folders_swap", "caption": "Swap Append/Load"},
-			{ "caption": "-" , "id": "end" },
+			{ "caption": "-" , "id": "end" }
 		]
 	}
 ]
 '''
 
-FOLDER_ENTRY = '%(indent)s{"command": "side_bar_folders_load", "args":{ "index": %(index)d%(append)s }},'
+FOLDER_ENTRY = '%(indent)s{ "command": "side_bar_folders_load", "args":{ "index": %(index)d%(append)s }},'
 
 
 def Window():
@@ -92,8 +94,19 @@ class Menu(object):
 class Pref:
 	def load(self):
 		Pref.folders = s.get('folders', [])
+		Pref.swap = None
+
+	def reload_prefs(self):
 		Pref.history = s.get('history_limit', 66)
+		Menu.generate_menu(len(Pref.folders))
 		Pref.swap = s.get("swap_append_load", False)
+		Pref.shorter_labels =s.get('shorter_labels', True)
+		Pref.label_replace_regexp =s.get('label_replace_regexp', True)
+		Pref.label_unix_style =s.get('label_unix_style', False)
+		Pref.label_characters =s.get('label_characters', 51)
+
+		Pref.home = os.path.expanduser("~")
+		self.reload()
 
 	def reload(self):
 		Pref.folders = s.get('folders', [])
@@ -105,28 +118,21 @@ class Pref:
 						if Pref.folders[k]['path'] == project_data['folders'][folder]['path']:
 							project_data['folders'][folder] = Pref.folders[k]
 							window.set_project_data(project_data)
-				if (
-					Pref.history != s.get('history_limit', 66) or
-					Pref.swap != s.get("swap_append_load", False)
-				):
-					# Re-generate menu with new history limit and swap preference
-					Pref.history = s.get('history_limit', 66)
-					Pref.swap = s.get("swap_append_load", False)
-					self.adjust_history()
-					Menu.generate_menu(len(Pref.folders))
 			except:
 				pass
+		self.save()
 
 	def adjust_history(self):
-		limit = s.get("history_limit", 0)
+		limit = Pref.history
 		if limit > 0:
 			count = len(Pref.folders)
 			if count > limit:
 				Pref.folders = Pref.folders[-limit:]
 
 	def save(self):
+		self.adjust_history()
 		if s.get('folders', []) != Pref.folders:
-			Pref.folders = sorted(Pref.folders, key=lambda x: x['path'].lower(), reverse=True)
+			Pref.folders = sorted(Pref.folders, key=lambda x: x["display"].lower() if 'display' in x and Pref.shorter_labels else Pref.display_name(x["path"].lower()), reverse=True)
 			s.set('folders', Pref.folders)
 			sublime.save_settings('Side Bar Folders.sublime-settings')
 			Menu.generate_menu(len(Pref.folders))
@@ -155,14 +161,30 @@ class Pref:
 			folder = os.path.normpath(os.path.join(project_path, folder))
 		return folder
 
+	def display_name(self, folder):
+		if not Pref.shorter_labels:
+			return folder
+		display = folder
+		if folder.startswith(Pref.home):
+			display = folder.replace(Pref.home, "~", 1)
+		if Pref.label_replace_regexp != '':
+			display = re.sub(Pref.label_replace_regexp.replace('\\', '\\\\'), '', display, 1, re.I)
+		if Pref.label_unix_style:
+			display = display.replace('\\', '/')
+		if len(display) > Pref.label_characters:
+			chars = int(Pref.label_characters/2)
+			display = display[:chars] + "…" + display[-chars:]
+		return display
+
 	def append(self, folder, window):
+		if len(Pref.folders) >= Pref.history:
+			return
 		folder["path"] = self.normalize_folder(folder["path"], window)
 		for k in range(len(Pref.folders)):
 			if Pref.folders[k]['path'] == folder['path']:
 				Pref.folders[k] = folder
 				return
 		Pref.folders.append(folder)
-		self.adjust_history()
 
 	def bucle(self):
 		Pref.save_folders()
@@ -170,10 +192,11 @@ class Pref:
 
 def plugin_loaded():
 	global s, Pref
-	s = sublime.load_settings('Side Bar Folders.sublime-settings');
+	s = sublime.load_settings('Side Bar Folders.sublime-settings')
 	Pref = Pref()
-	Pref.load();
-	s.add_on_change('reload', lambda:Pref.reload())
+	Pref.load()
+	Pref.reload_prefs()
+	s.add_on_change('reload_prefs', lambda:Pref.reload_prefs())
 	Menu.prepare_menu()
 	Pref.bucle()
 
@@ -182,8 +205,8 @@ class side_bar_folders_start_blank(sublime_plugin.WindowCommand):
 		project = get_project_data(Window())
 		if not append:
 			project['folders'] = []
-			Window().set_project_data(project);
-		Window().run_command('prompt_add_folder');
+			Window().set_project_data(project)
+		Window().run_command('prompt_add_folder')
 
 	def is_enabled(self, append = False):
 		Pref.save_folders() # <--- this works as an onpopupshowing..
@@ -191,24 +214,21 @@ class side_bar_folders_start_blank(sublime_plugin.WindowCommand):
 
 class side_bar_folders_load(sublime_plugin.WindowCommand):
 	def run(self, index =- 1, append = False):
-		folder = (Pref.folders[::-1])[index];
+		folder = (Pref.folders[::-1])[index]
 		if self.audit_folder(folder, index):
 			return
 		project = get_project_data(Window())
 		if not append:
 			project['folders'] = []
-		project['folders'].append(folder);
+		project['folders'].append(folder)
 		Window().set_project_data(project)
 
 	def audit_folder(self, folder, index):
 		abort = False
 		if not os.path.exists(folder['path']):
 			if sublime.ok_cancel_dialog('Folder does not currently exist! Do you want to remove the folder from the history?'):
-				folders = s.get("folders", [])
-				if index < len(folders):
-					del folders[len(folders) - index - 1]
-					s.set("folders", folders)
-					sublime.save_settings('Side Bar Folders.sublime-settings')
+				if index < len(Pref.folders):
+					del Pref.folders[len(Pref.folders) - index - 1]
 				Pref.save()
 			abort = True
 		return abort
@@ -221,7 +241,8 @@ class side_bar_folders_load(sublime_plugin.WindowCommand):
 
 	def description(self, index = -1, append = False):
 		try:
-			return (Pref.folders[::-1])[index]['path']
+			item = (Pref.folders[::-1])[index]
+			return item["display"] if 'display' in item and Pref.shorter_labels else Pref.display_name(item["path"])
 		except:
 			return ''
 
@@ -236,7 +257,7 @@ class side_bar_folders_sidebar_clear(sublime_plugin.WindowCommand):
 		if sublime.ok_cancel_dialog('Remove all folders?'):
 			project = get_project_data(Window())
 			project['folders'] = []
-			Window().set_project_data(project);
+			Window().set_project_data(project)
 
 	def is_visible(self):
 		return len(get_project_data(self.window)['folders']) > 0
@@ -250,6 +271,3 @@ class side_bar_folders_swap(sublime_plugin.WindowCommand):
 		current_swap = s.get("swap_append_load", False)
 		s.set("swap_append_load", not current_swap)
 		sublime.save_settings('Side Bar Folders.sublime-settings')
-
-	def is_checked(self):
-		return s.get("swap_append_load", False)
