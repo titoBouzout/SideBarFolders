@@ -56,6 +56,24 @@ def get_project_path(window):
 	file_name = window.project_file_name()
 	return None if file_name is None else os.path.dirname(file_name)
 
+def is_sidebar_open():
+	window = sublime.active_window()
+	view = window.active_view()
+	if view:
+		sel1 = view.sel()[0]
+		window.run_command('focus_side_bar')
+		window.run_command('move', {"by": "characters", "forward": True})
+		sel2 = view.sel()[0]
+		if sel1 != sel2:
+			window.run_command('move', {"by": "characters", "forward": False})
+			return False # print('sidebar is closed')
+		else:
+			group, index = window.get_view_index(view)
+			window.focus_view(view)
+			window.focus_group(group)
+			return True # print('sidebar is open')
+	return True # by default assume is open if no view is opened
+
 class Menu(object):
 	@staticmethod
 	def prepare_menu():
@@ -222,6 +240,8 @@ class side_bar_folders_load(sublime_plugin.WindowCommand):
 			project['folders'] = []
 		project['folders'].append(folder)
 		Window().set_project_data(project)
+		if not is_sidebar_open():
+			Window().run_command('toggle_side_bar')
 
 	def audit_folder(self, folder, index):
 		abort = False
