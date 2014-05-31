@@ -112,18 +112,17 @@ class Menu(object):
 class Pref:
 	def load(self):
 		Pref.folders = s.get('folders', [])
-		Pref.swap = None
 
 	def reload_prefs(self):
 		Pref.history = s.get('history_limit', 66)
-		Menu.generate_menu(len(Pref.folders))
 		Pref.swap = s.get("swap_append_load", False)
 		Pref.shorter_labels =s.get('shorter_labels', True)
 		Pref.label_replace_regexp =s.get('label_replace_regexp', True)
 		Pref.label_unix_style =s.get('label_unix_style', False)
 		Pref.label_characters =s.get('label_characters', 51)
-
 		Pref.home = os.path.expanduser("~")
+
+		Menu.generate_menu(len(Pref.folders))
 		self.reload()
 
 	def reload(self):
@@ -149,8 +148,8 @@ class Pref:
 
 	def save(self):
 		self.adjust_history()
+		Pref.folders = sorted(Pref.folders, key=lambda x: x["display"].lower() if 'display' in x and Pref.shorter_labels else Pref.display_name(x["path"].lower()), reverse=True)
 		if s.get('folders', []) != Pref.folders:
-			Pref.folders = sorted(Pref.folders, key=lambda x: x["display"].lower() if 'display' in x and Pref.shorter_labels else Pref.display_name(x["path"].lower()), reverse=True)
 			s.set('folders', Pref.folders)
 			sublime.save_settings('Side Bar Folders.sublime-settings')
 			Menu.generate_menu(len(Pref.folders))
