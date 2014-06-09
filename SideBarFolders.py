@@ -9,6 +9,7 @@ MENU = '''[
 	{
 		"caption": "Folders",
 		"id": "folders",
+		"mnemonic": "d",
 		"children": [
 			{ "caption": "-" , "id": "open" },
 			{ "command": "side_bar_folders_start_blank", "caption": "Load Folder…"},
@@ -47,7 +48,7 @@ s = {}
 # when closing a project, project_data returns "None"
 def get_project_data(window):
 	project_data = window.project_data()
-	if project_data is None:
+	if project_data is None or 'folders' not in project_data:
 		project_data = {}
 		project_data['folders'] = []
 	return project_data
