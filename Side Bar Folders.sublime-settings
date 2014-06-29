@@ -16,5 +16,8 @@
     "label_replace_regexp": "^[a-z]:\\((www|projects)\\)?",
 
     //Unix style? replace every \ with /
-    "label_unix_style": true
+    "label_unix_style": true,
+
+    //auto load folder for opened file when it is contained in the folder list
+    "auto_load_folder_for_opened_file": true
 }
