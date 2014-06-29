@@ -301,24 +301,24 @@ class side_bar_folders_listener(sublime_plugin.EventListener):
 		pref.save_folders()
 
 class side_bar_folders_auto_add_folder_listener(sublime_plugin.EventListener):
-    def on_activated(self, view):
-        f = view.file_name()
-        if not f or view.settings().has('side_bar_folders_auto_load_folder'):
-            return
-        path = os.path.dirname(f)
-        view.settings().set('side_bar_folders_auto_load_folder', 1)
-        if s.get('auto_load_folder_for_opened_file') and path and os.path.exists(path):
-            for folder in pref.folders:
-                if is_subdir(path, folder['path']):
-                    project_data = view.window().project_data()
-                    if not project_data or "folders" not in project_data:
-                        project_data = {'folders': [{'path': path, 'follow_symlinks': True}]}
-                    else:
-                        project_data["folders"].append({'path': path, 'follow_symlinks': True})
+	def on_activated(self, view):
+		f = view.file_name()
+		if not f or view.settings().has('side_bar_folders_auto_load_folder'):
+			return
+		path = os.path.dirname(f)
+		view.settings().set('side_bar_folders_auto_load_folder', 1)
+		if s.get('auto_load_folder_for_opened_file') and path and os.path.exists(path):
+			for folder in pref.folders:
+				if is_subdir(path, folder['path']):
+					project_data = view.window().project_data()
+					if not project_data or "folders" not in project_data:
+						project_data = {'folders': [{'path': path, 'follow_symlinks': True}]}
+					else:
+						project_data["folders"].append({'path': path, 'follow_symlinks': True})
 
-                    view.window().set_project_data(project_data)
-                    break
-            sublime.set_timeout(lambda: view.window().run_command('reveal_in_side_bar'), 100)
+					view.window().set_project_data(project_data)
+					break
+			sublime.set_timeout(lambda: view.window().run_command('reveal_in_side_bar'), 100)
 
 class side_bar_folders_swap(sublime_plugin.WindowCommand):
 	def run(self):
