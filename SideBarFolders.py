@@ -76,15 +76,18 @@ def is_sidebar_open():
 	return True # by default assume is open if no view is opened
 
 def is_subdir(path, directory):
-    path = os.path.realpath(path)
-    directory = os.path.realpath(directory)
+	path = os.path.realpath(path)
+	directory = os.path.realpath(directory)
 
-    relative = os.path.relpath(path, directory)
+	try:
+		relative = os.path.relpath(path, directory)
 
-    if relative.startswith(os.pardir):
-        return False
-    else:
-        return True
+		if relative.startswith(os.pardir):
+			return False
+		else:
+			return True
+	except:
+		return False
 
 class Menu(object):
 	@staticmethod
