@@ -19,5 +19,5 @@
     "label_unix_style": true,
 
     //auto load folder for opened file when it is contained in the folder list
-    "auto_load_folder_for_opened_file": true
+    "auto_load_folder_for_opened_file": false
 }
