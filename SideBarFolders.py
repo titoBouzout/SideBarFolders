@@ -307,14 +307,16 @@ class side_bar_folders_auto_add_folder_listener(sublime_plugin.EventListener):
 			return
 		path = os.path.dirname(f)
 		view.settings().set('side_bar_folders_auto_load_folder', 1)
+		project_data = view.window().project_data()
+		if any([is_subdir(path, folder['path']) for folder in project_data]):
+			return
 		if s.get('auto_load_folder_for_opened_file') and path and os.path.exists(path):
 			for folder in pref.folders:
 				if is_subdir(path, folder['path']):
-					project_data = view.window().project_data()
 					if not project_data or "folders" not in project_data:
-						project_data = {'folders': [{'path': path, 'follow_symlinks': True}]}
+						project_data = {'folders': [{'path': folder['path'], 'follow_symlinks': True}]}
 					else:
-						project_data["folders"].append({'path': path, 'follow_symlinks': True})
+						project_data["folders"].append({'path': folder['path'], 'follow_symlinks': True})
 
 					view.window().set_project_data(project_data)
 					break
