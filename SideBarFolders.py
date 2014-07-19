@@ -310,7 +310,7 @@ class side_bar_folders_auto_add_folder_listener(sublime_plugin.EventListener):
 		project_data = view.window().project_data()
 		if project_data is None:
 			project_data = {}
-		if any([is_subdir(path, folder['path']) for folder in project_data]):
+		if any([is_subdir(path, folder['path']) for folder in project_data if 'path' in folder]):
 			return
 		if s.get('auto_load_folder_for_opened_file') and path and os.path.exists(path):
 			for folder in pref.folders:
