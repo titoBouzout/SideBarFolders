@@ -1,23 +1,29 @@
 {
-    // Swap Append/Load as the default list
-    "swap_append_load": false,
+	// Swap Append/Load as the default list
+	"swap_append_load": false,
 
-    // History max number of history items
-    // 0 means no limit
-    "history_limit": 66,
+	// History max number of history items
+	// 0 means no limit
+	"history_limit": 66,
 
-    //Labels
-    "shorter_labels": false,
+	//Labels
+	"shorter_labels": false,
 
-    // Max number of characters
-    "label_characters": 51,
+	// Max number of characters
+	"label_characters": 51,
 
-    //remove prefixes, such drive names or the folder of "projects"
-    "label_replace_regexp": "^[a-z]:\\((www|projects)\\)?",
+	//remove prefixes, such drive names or the folder of "projects"
+	"label_replace_regexp": "^[a-z]:\\((www|projects)\\)?",
 
-    //Unix style? replace every \ with /
-    "label_unix_style": true,
+	//Unix style? replace every \ with /
+	"label_unix_style": true,
 
-    //auto load folder for opened file when it is contained in the folder list
-    "auto_load_folder_for_opened_file": false
+	//auto load folder for opened file when it is contained in the folder list
+	"auto_load_folder_for_opened_file": false,
+
+	//auto load the following folder to the sidebar in all the situations
+	"auto_load_folders_list": [
+		//"S:/cursores",
+		//"C:/Users/luna/node_modules"
+	],
 }

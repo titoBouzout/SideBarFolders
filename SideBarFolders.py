@@ -44,6 +44,7 @@ def Window():
 	return sublime.active_window()
 
 s = {}
+pref = {}
 
 # when closing a project, project_data returns "None"
 def get_project_data(window):
@@ -135,6 +136,7 @@ class Pref:
 		self.label_replace_regexp =s.get('label_replace_regexp', True)
 		self.label_unix_style =s.get('label_unix_style', False)
 		self.label_characters =s.get('label_characters', 51)
+		self.auto_load_folders_list =s.get('auto_load_folders_list', [])
 		self.home = os.path.expanduser("~")
 
 		Menu.generate_menu(len(self.folders))
@@ -222,16 +224,6 @@ class Pref:
 		self.save_folders()
 		sublime.set_timeout(lambda:self.bucle(), 60*1000)
 
-def plugin_loaded():
-	global s, pref
-	s = sublime.load_settings('Side Bar Folders.sublime-settings')
-	pref = Pref()
-	pref.load()
-	pref.reload_prefs()
-	s.add_on_change('reload_prefs', lambda:pref.reload_prefs())
-	Menu.prepare_menu()
-	pref.bucle()
-
 class side_bar_folders_start_blank(sublime_plugin.WindowCommand):
 	def run(self, append = False):
 		project = get_project_data(Window())
@@ -299,6 +291,16 @@ class side_bar_folders_sidebar_clear(sublime_plugin.WindowCommand):
 class side_bar_folders_listener(sublime_plugin.EventListener):
 	def on_activated(self, view):
 		pref.save_folders()
+		something_changed = False
+		project = get_project_data(Window())
+		if pref.auto_load_folders_list:
+			for folder in pref.auto_load_folders_list:
+				folder = {'path': os.path.normpath(folder), 'follow_symlinks': True}
+				if folder not in project['folders']:
+					something_changed = True
+					project['folders'].append(folder)
+			if something_changed:
+				Window().set_project_data(project)
 
 class side_bar_folders_auto_add_folder_listener(sublime_plugin.EventListener):
 	def on_activated(self, view):
@@ -327,3 +329,14 @@ class side_bar_folders_swap(sublime_plugin.WindowCommand):
 		current_swap = s.get("swap_append_load", False)
 		s.set("swap_append_load", not current_swap)
 		sublime.save_settings('Side Bar Folders.sublime-settings')
+
+def plugin_loaded():
+	global s, pref
+	s = sublime.load_settings('Side Bar Folders.sublime-settings')
+	pref = Pref()
+	pref.load()
+	pref.reload_prefs()
+	s.clear_on_change('reload_prefs')
+	s.add_on_change('reload_prefs', lambda:pref.reload_prefs())
+	Menu.prepare_menu()
+	pref.bucle()
