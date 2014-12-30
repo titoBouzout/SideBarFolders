@@ -44,7 +44,7 @@ def Window():
 	return sublime.active_window()
 
 s = {}
-pref = {}
+Pref = {}
 
 # when closing a project, project_data returns "None"
 def get_project_data(window):
@@ -59,7 +59,7 @@ def get_project_path(window):
 	return None if file_name is None else os.path.dirname(file_name)
 
 def is_sidebar_open():
-	window = sublime.active_window()
+	window = Window()
 	view = window.active_view()
 	if view:
 		sel1 = view.sel()[0]
@@ -127,58 +127,58 @@ class Menu(object):
 
 class Pref:
 	def load(self):
-		self.folders = s.get('folders', [])
+		Pref.folders = s.get('folders', [])
 
 	def reload_prefs(self):
-		self.history = s.get('history_limit', 66)
-		self.swap = s.get("swap_append_load", False)
-		self.shorter_labels =s.get('shorter_labels', True)
-		self.label_replace_regexp =s.get('label_replace_regexp', True)
-		self.label_unix_style =s.get('label_unix_style', False)
-		self.label_characters =s.get('label_characters', 51)
-		self.auto_load_folders_list =s.get('auto_load_folders_list', [])
-		self.home = os.path.expanduser("~")
+		Pref.history = s.get('history_limit', 66)
+		Pref.swap = s.get("swap_append_load", False)
+		Pref.shorter_labels = s.get('shorter_labels', True)
+		Pref.label_replace_regexp = s.get('label_replace_regexp', True)
+		Pref.label_unix_style = s.get('label_unix_style', False)
+		Pref.label_characters = s.get('label_characters', 51)
+		Pref.auto_load_folders_list = s.get('auto_load_folders_list', [])
+		Pref.home = os.path.expanduser("~")
 
-		Menu.generate_menu(len(self.folders))
-		self.reload()
+		Menu.generate_menu(len(Pref.folders))
+		Pref.reload()
 
 	def reload(self):
-		self.folders = s.get('folders', [])
+		Pref.folders = s.get('folders', [])
 		for window in sublime.windows():
 			try:
 				project_data = get_project_data(window)
 				for folder in range(len(project_data['folders'])):
-					for k in range(len(self.folders)):
-						if self.folders[k]['path'] == project_data['folders'][folder]['path']:
-							project_data['folders'][folder] = self.folders[k]
+					for k in range(len(Pref.folders)):
+						if Pref.folders[k]['path'] == project_data['folders'][folder]['path']:
+							project_data['folders'][folder] = Pref.folders[k]
 							window.set_project_data(project_data)
 			except:
 				pass
-		self.save()
+		Pref.save()
 
 	def adjust_history(self):
-		limit = self.history
+		limit = Pref.history
 		if limit > 0:
-			count = len(self.folders)
+			count = len(Pref.folders)
 			if count > limit:
-				self.folders = self.folders[-limit:]
+				Pref.folders = Pref.folders[-limit:]
 
 	def save(self):
-		self.adjust_history()
-		self.folders = sorted(self.folders, key=lambda x: x["display"].lower() if 'display' in x and self.shorter_labels else self.display_name(x["path"].lower()), reverse=True)
-		if s.get('folders', []) != self.folders:
-			s.set('folders', self.folders)
+		Pref.adjust_history()
+		Pref.folders = sorted(Pref.folders, key=lambda x: x["display"].lower() if 'display' in x and Pref.shorter_labels else Pref.display_name(x["path"].lower()), reverse=True)
+		if s.get('folders', []) != Pref.folders:
+			s.set('folders', Pref.folders)
 			sublime.save_settings('Side Bar Folders.sublime-settings')
-			Menu.generate_menu(len(self.folders))
+			Menu.generate_menu(len(Pref.folders))
 
 	def save_folders(self):
 		for window in sublime.windows():
 			try:
 				for folder in get_project_data(window)['folders']:
-					self.append(folder, window)
+					Pref.append(folder, window)
 			except:
 				pass
-		self.save()
+		Pref.save()
 
 	def normalize_folder(self, folder, window):
 		# If a path is given that is relative (from a project of disk)
@@ -196,33 +196,33 @@ class Pref:
 		return folder
 
 	def display_name(self, folder):
-		if not self.shorter_labels:
+		if not Pref.shorter_labels:
 			return folder
 		display = folder
-		if folder.startswith(self.home):
-			display = folder.replace(self.home, "~", 1)
-		if self.label_replace_regexp != '':
-			display = re.sub(self.label_replace_regexp.replace('\\', '\\\\'), '', display, 1, re.I)
-		if self.label_unix_style:
+		if folder.startswith(Pref.home):
+			display = folder.replace(Pref.home, "~", 1)
+		if Pref.label_replace_regexp != '':
+			display = re.sub(Pref.label_replace_regexp.replace('\\', '\\\\'), '', display, 1, re.I)
+		if Pref.label_unix_style:
 			display = display.replace('\\', '/')
-		if len(display) > self.label_characters:
-			chars = int(self.label_characters/2)
+		if len(display) > Pref.label_characters:
+			chars = int(Pref.label_characters/2)
 			display = display[:chars] + "…" + display[-chars:]
 		return display
 
 	def append(self, folder, window):
-		if len(self.folders) >= self.history:
+		if len(Pref.folders) >= Pref.history:
 			return
-		folder["path"] = self.normalize_folder(folder["path"], window)
-		for k in range(len(self.folders)):
-			if self.folders[k]['path'] == folder['path']:
-				self.folders[k] = folder
+		folder["path"] = Pref.normalize_folder(folder["path"], window)
+		for k in range(len(Pref.folders)):
+			if Pref.folders[k]['path'] == folder['path']:
+				Pref.folders[k] = folder
 				return
-		self.folders.append(folder)
+		Pref.folders.append(folder)
 
 	def bucle(self):
-		self.save_folders()
-		sublime.set_timeout(lambda:self.bucle(), 60*1000)
+		Pref.save_folders()
+		sublime.set_timeout(lambda:Pref.bucle(), 60*1000)
 
 class side_bar_folders_start_blank(sublime_plugin.WindowCommand):
 	def run(self, append = False):
@@ -233,12 +233,12 @@ class side_bar_folders_start_blank(sublime_plugin.WindowCommand):
 		Window().run_command('prompt_add_folder')
 
 	def is_enabled(self, append = False):
-		pref.save_folders() # <--- this works as an onpopupshowing..
+		Pref.save_folders() # <--- this works as an onpopupshowing..
 		return True
 
 class side_bar_folders_load(sublime_plugin.WindowCommand):
 	def run(self, index =- 1, append = False):
-		folder = (pref.folders[::-1])[index]
+		folder = (Pref.folders[::-1])[index]
 		if self.audit_folder(folder, index):
 			return
 		project = get_project_data(Window())
@@ -253,30 +253,30 @@ class side_bar_folders_load(sublime_plugin.WindowCommand):
 		abort = False
 		if not os.path.exists(folder['path']):
 			if sublime.ok_cancel_dialog('Folder does not currently exist! Do you want to remove the folder from the history?'):
-				if index < len(pref.folders):
-					del pref.folders[len(pref.folders) - index - 1]
-				pref.save()
+				if index < len(Pref.folders):
+					del Pref.folders[len(Pref.folders) - index - 1]
+				Pref.save()
 			abort = True
 		return abort
 
 	def is_visible(self, index = -1, append = False):
 		try:
-			return (pref.folders[::-1])[index] != None
+			return (Pref.folders[::-1])[index] != None
 		except:
 			return False
 
 	def description(self, index = -1, append = False):
 		try:
-			item = (pref.folders[::-1])[index]
-			return item["display"] if 'display' in item and pref.shorter_labels else pref.display_name(item["path"])
+			item = (Pref.folders[::-1])[index]
+			return item["display"] if 'display' in item and Pref.shorter_labels else Pref.display_name(item["path"])
 		except:
 			return ''
 
 class side_bar_folders_clear(sublime_plugin.WindowCommand):
 	def run(self):
 		if sublime.ok_cancel_dialog('Are you sure?'):
-			pref.folders = []
-			pref.save()
+			Pref.folders = []
+			Pref.save()
 
 class side_bar_folders_sidebar_clear(sublime_plugin.WindowCommand):
 	def run(self):
@@ -286,15 +286,15 @@ class side_bar_folders_sidebar_clear(sublime_plugin.WindowCommand):
 			Window().set_project_data(project)
 
 	def is_visible(self):
-		return len(get_project_data(self.window)['folders']) > 0
+		return len(get_project_data(Window())['folders']) > 0
 
 class side_bar_folders_listener(sublime_plugin.EventListener):
 	def on_activated(self, view):
-		pref.save_folders()
+		Pref.save_folders()
 		something_changed = False
 		project = get_project_data(Window())
-		if pref.auto_load_folders_list:
-			for folder in pref.auto_load_folders_list:
+		if Pref.auto_load_folders_list:
+			for folder in Pref.auto_load_folders_list:
 				folder = {'path': os.path.normpath(folder), 'follow_symlinks': True}
 				if folder not in project['folders']:
 					something_changed = True
@@ -309,20 +309,21 @@ class side_bar_folders_auto_add_folder_listener(sublime_plugin.EventListener):
 			return
 		path = os.path.dirname(f)
 		view.settings().set('side_bar_folders_auto_load_folder', 1)
-		project_data = view.window().project_data()
+		window = Window()
+		project_data = window.project_data()
 		if project_data and 'folders' in project_data and any(is_subdir(path, folder['path']) for folder in project_data['folders']):
 			return
 		if s.get('auto_load_folder_for_opened_file') and path and os.path.exists(path):
-			for folder in pref.folders:
+			for folder in Pref.folders:
 				if is_subdir(path, folder['path']):
 					if not project_data or "folders" not in project_data:
 						project_data = {'folders': [{'path': folder['path'], 'follow_symlinks': True}]}
 					else:
 						project_data["folders"].append({'path': folder['path'], 'follow_symlinks': True})
 
-					view.window().set_project_data(project_data)
+					window.set_project_data(project_data)
 					break
-			sublime.set_timeout(lambda: view.window().run_command('reveal_in_side_bar'), 100)
+			sublime.set_timeout(lambda: window.run_command('reveal_in_side_bar'), 100)
 
 class side_bar_folders_swap(sublime_plugin.WindowCommand):
 	def run(self):
@@ -331,12 +332,12 @@ class side_bar_folders_swap(sublime_plugin.WindowCommand):
 		sublime.save_settings('Side Bar Folders.sublime-settings')
 
 def plugin_loaded():
-	global s, pref
+	global s, Pref
 	s = sublime.load_settings('Side Bar Folders.sublime-settings')
-	pref = Pref()
-	pref.load()
-	pref.reload_prefs()
+	Pref = Pref()
+	Pref.load()
+	Pref.reload_prefs()
 	s.clear_on_change('reload_prefs')
-	s.add_on_change('reload_prefs', lambda:pref.reload_prefs())
+	s.add_on_change('reload_prefs', lambda:Pref.reload_prefs())
 	Menu.prepare_menu()
-	pref.bucle()
+	Pref.bucle()
