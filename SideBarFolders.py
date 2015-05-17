@@ -31,6 +31,7 @@ MENU = '''[
 			{ "caption": "-" , "id": "options-separator" },
 %(entries)s
 			{ "caption": "-" , "id": "options" },
+			{ "command": "side_bar_folders_audit_all", "caption": "Clear Missing Folders"},
 			{ "caption": "-" , "id": "end" }
 		]
 	}
@@ -271,6 +272,16 @@ class side_bar_folders_load(sublime_plugin.WindowCommand):
 			return item["display"] if 'display' in item and Pref.shorter_labels else Pref.display_name(item["path"])
 		except:
 			return ''
+
+class side_bar_folders_audit_all(sublime_plugin.WindowCommand):
+	def run(self):
+		if sublime.ok_cancel_dialog('Are you sure?'):
+			folders = []
+			for item in Pref.folders:
+				if os.path.exists(item['path']):
+					folders.append(item)
+			Pref.folders = folders
+			Pref.save()
 
 class side_bar_folders_clear(sublime_plugin.WindowCommand):
 	def run(self):
