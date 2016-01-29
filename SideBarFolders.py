@@ -61,6 +61,8 @@ def get_project_path(window):
 
 def is_sidebar_open():
 	window = Window()
+	if int(sublime.version()) >= 3099:
+		return window.is_sidebar_visible()
 	view = window.active_view()
 	if view:
 		sel1 = view.sel()[0]
