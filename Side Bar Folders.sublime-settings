@@ -21,6 +21,9 @@
 	//auto load folder for opened file when it is contained in the folder list
 	"auto_load_folder_for_opened_file": false,
 
+	// if a file opening, matches the folder path of other window than current, move the view to that window
+	"open_files_in_folder_window": false,
+
 	//auto load the following folder to the sidebar in all the situations
 	"auto_load_folders_list": [
 		//"S:/cursores",
