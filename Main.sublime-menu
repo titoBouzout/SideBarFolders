@@ -1,0 +1,26 @@
+[{
+	"caption": "Preferences",
+	"mnemonic": "n",
+	"id": "preferences",
+	"children": [{
+		"caption": "Package Settings",
+		"mnemonic": "P",
+		"id": "package-settings",
+		"children": [{
+			"caption": "Side Bar Folders",
+			"children": [{
+				"command": "open_file",
+				"args": {
+					"file": "${packages}/SideBarFolders/Side Bar Folders.sublime-settings"
+				},
+				"caption": "Settings – Default"
+			}, {
+				"command": "open_file",
+				"args": {
+					"file": "${packages}/User/Side Bar Folders.sublime-settings"
+				},
+				"caption": "Settings – User"
+			}]
+		}]
+	}]
+}]
