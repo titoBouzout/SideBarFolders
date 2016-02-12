@@ -344,6 +344,50 @@ class side_bar_folders_swap(sublime_plugin.WindowCommand):
 		s.set("swap_append_load", not current_swap)
 		sublime.save_settings('Side Bar Folders.sublime-settings')
 
+class side_bar_folders_quick_switch(sublime_plugin.WindowCommand):
+	def run(self):
+		folder_list = list(map(lambda folder: folder['path'], s.get('folders', [])))
+		folder_list.reverse()
+		self.display_list(folder_list)
+
+	def display_list(self, list):
+		Window().show_quick_panel(list, self.on_done)
+
+	def on_done(self, index = -1, append = False):
+		folder = (Pref.folders[::-1])[index]
+		if self.audit_folder(folder, index):
+			return
+		project = get_project_data(Window())
+		if not append:
+			project['folders'] = []
+		project['folders'].append(folder)
+		Window().set_project_data(project)
+		if not is_sidebar_open():
+			Window().run_command('toggle_side_bar')
+
+	def audit_folder(self, folder, index):
+		abort = False
+		if not os.path.exists(folder['path']):
+			if sublime.ok_cancel_dialog('Folder does not currently exist! Do you want to remove the folder from the history?'):
+				if index < len(Pref.folders):
+					del Pref.folders[len(Pref.folders) - index - 1]
+				Pref.save()
+			abort = True
+		return abort
+
+	def is_visible(self, index = -1, append = False):
+		try:
+			return (Pref.folders[::-1])[index] != None
+		except:
+			return False
+
+	def description(self, index = -1, append = False):
+		try:
+			item = (Pref.folders[::-1])[index]
+			return item["display"] if 'display' in item and Pref.shorter_labels else Pref.display_name(item["path"])
+		except:
+			return ''
+
 def plugin_loaded():
 	global s, Pref
 	s = sublime.load_settings('Side Bar Folders.sublime-settings')
