@@ -17,6 +17,7 @@ MENU = '''[
 			{ "caption": "-", "id": "edit" },
 			{ "command": "open_file", "args": { "file": "${packages}/User/Side Bar Folders.sublime-settings" }, "caption": "Edit Folders"},
 			{ "command": "side_bar_folders_sidebar_clear", "caption": "Clear Sidebar"},
+			{ "command": "side_bar_folders_remove_current", "caption": "Remove Current Folder"},
 			{ "caption": "-" , "id": "history" },
 			{
 				"caption": "%(buried_label)s Folder",
@@ -284,6 +285,25 @@ class side_bar_folders_audit_all(sublime_plugin.WindowCommand):
 					folders.append(item)
 			Pref.folders = folders
 			Pref.save()
+
+class side_bar_folders_remove_current(sublime_plugin.WindowCommand):
+	def run(self):
+		if sublime.ok_cancel_dialog('Are you sure?'):
+			project = get_project_data(Window())
+			to_delete = {}
+			if project and 'folders' in project and project['folders']:
+				for item in project['folders']:
+					to_delete[item['path']] = ''
+			if to_delete:
+				project['folders'] = []
+				Window().set_project_data(project)
+
+				folders = []
+				for item in Pref.folders:
+					if item['path'] not in to_delete:
+						folders.append(item)
+				Pref.folders = folders
+				Pref.save()
 
 class side_bar_folders_clear(sublime_plugin.WindowCommand):
 	def run(self):
